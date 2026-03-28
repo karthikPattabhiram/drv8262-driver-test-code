@@ -348,12 +348,12 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
+  htim1.Init.Prescaler = 35;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
@@ -442,9 +442,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(mdrv_nSleep_GPIO_Port, mdrv_nSleep_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : mdrv_nSleep_Pin */
   GPIO_InitStruct.Pin = mdrv_nSleep_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -458,19 +455,85 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(mdrv_nFault_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void M_init(TIM_HandleTypeDef *htim) {
+	if (htim-> Instance == htim1) {
+
+		HAL_GPIO_WritePin(mdrv_nSleep_GPIO_Port, mdrv_nSleep_Pin, GPIO_PIN_SET); // nsleep pin set to 1
+
+		// In break mode
+		// IN2/IN4 = 1 and IN1/IN3 = 1 with 100% duty cycle
+		TIM1->CCR1 = TIM1->ARR * 100;
+		TIM1->CCR2 = TIM1->ARR * 100;
+
+		TIM1->CCR3 = TIM1->ARR * 100;
+		TIM1->CCR4 = TIM1->ARR * 100;
+	}
+
+
+
+
+}
+void M_forward(uint8_t speed) {
+
+	double ccr =  TIM1->ARR * speed;
+
+	//  IN1/IN3 = 1 and IN2/IN4 =0  with speed% duty cycle
+	 TIM1->CCR1 = ccr;
+	 TIM1->CCR3 = ccr;
+
+	 TIM1->CCR2 = 0;
+	 TIM1->CCR4 = 0;
+
+}
+
+void M_reverse() {
+
+	double ccr =  TIM1->ARR * speed;
+
+	// IN2/IN4 = 1 and IN1/IN3 = 0  with speed% duty cycle
+
+		 TIM1->CCR2 = ccr;
+		 TIM1->CCR4 = ccr;
+
+		 TIM1->CCR1 = 0;
+		 TIM1->CCR3 = 0;
+}
+
+void M_break() {
+
+
+	// IN2/IN4 = 1 and IN1/IN3 = 1 with 50% duty cycle
+
+	TIM1->CCR1 = TIM1->ARR * 50;
+	TIM1->CCR2 = TIM1->ARR * 50;
+
+	TIM1->CCR3 = TIM1->ARR * 50;
+	TIM1->CCR4 = TIM1->ARR * 50;
+
+
+}
+
+void M_coast() {
+
+	// IN2/IN4 = 0 and IN1/IN3 = 0 with 0% duty cycle
+
+	TIM1->CCR1 = 0;
+	TIM1->CCR2 = 0;
+
+	TIM1->CCR3 = 0;
+	TIM1->CCR4 = 0;
+
+}
+
+void M_sleep() {
+	HAL_GPIO_WritePin(mdrv_nSleep_GPIO_Port, mdrv_nSleep_Pin, GPIO_PIN_RESET); // nsleep pin set to 0
+}
 
 /* USER CODE END 4 */
 
